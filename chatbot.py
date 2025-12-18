@@ -74,7 +74,7 @@ st.markdown("""
 # ======================================================================================
 # 2. CẤU HÌNH API
 # ======================================================================================
-API_KEY = "AIzaSyCwxB4KbSRtXGV5fAwXA84h5OOKiaVFSxM"  # <--- DÁN API KEY CỦA BẠN VÀO ĐÂY
+API_KEY = "AIzaSyDDmwi4eDrp0fJzl-wy64lJEz5TJWIGGiQ"  # <--- DÁN API KEY CỦA BẠN VÀO ĐÂY
 
 try:
     genai.configure(api_key=API_KEY)
@@ -527,4 +527,5 @@ if st.session_state.quiz_batches:
 
 elif not st.session_state.quiz_batches:
     st.info("👋 Chào mừng! Hãy chọn chế độ bên trái và bắt đầu.")
+
 
