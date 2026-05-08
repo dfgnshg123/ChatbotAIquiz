@@ -125,7 +125,7 @@ st.markdown("""
 # 2. CẤU HÌNH API (NHẬP 1 LẦN DUY NHẤT TẠI ĐÂY)
 # ======================================================================================
 
-API_KEY = "AIzaSyC3fnqXzSeECPnm5lsIfcIcTBN_Zhrml98"
+API_KEY = "AIzaSyD_YfhGN5-ZdmYYT5-MWOw7LbR1mc7vPz0"
 
 try:
     genai.configure(api_key=API_KEY)
