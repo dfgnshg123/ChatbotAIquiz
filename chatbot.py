@@ -132,25 +132,6 @@ try:
 except Exception as e:
     st.error(f"Lỗi cấu hình API: {e}")
 
-# Hàm gọi Gemini với Model CỐ ĐỊNH - TUYỆT ĐỐI KHÔNG THAY ĐỔI
-def get_gemini_response(prompt):
-    # Dòng code cố định theo yêu cầu
-    model = genai.GenerativeModel('models/gemini-1.5-flash')
-    
-    try:
-        response = model.generate_content(prompt)
-        return response.text
-    except Exception as e:
-        error_msg = str(e)
-        if "429" in error_msg or "Quota exceeded" in error_msg:
-            st.error("⚠️ API của bạn đã hết lượt sử dụng (Quota Exceeded). Vui lòng thử lại sau.")
-            return None
-        elif "400" in error_msg:
-             st.error("⚠️ Yêu cầu không hợp lệ (Lỗi 400).")
-             return None
-        else:
-            st.error(f"⚠️ Lỗi kết nối AI: {error_msg}")
-            return None
 
 def parse_json_response(response_text):
     if not response_text: return None
