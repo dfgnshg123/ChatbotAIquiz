@@ -132,33 +132,43 @@ try:
 except Exception as e:
     st.error(f"Lỗi cấu hình API: {e}")
 
-# Hàm gọi Gemini đã được nâng cấp với cơ chế tự động tìm Model miễn phí
+# Hàm gọi Gemini tự động lấy model từ hệ thống của Google
 def get_gemini_response(prompt):
-    models_to_try = [
-        'gemini-1.5-flash', 
-        'gemini-1.5-flash-latest', 
-        'gemini-pro'
-    ]
-    
-    last_error = ""
-    for model_name in models_to_try:
-        try:
-            model = genai.GenerativeModel(model_name)
-            response = model.generate_content(prompt)
-            return response.text
-        except Exception as e:
-            last_error = str(e)
-            if "404" in last_error or "not found" in last_error.lower():
-                continue 
-            elif "429" in last_error or "Quota exceeded" in last_error:
-                st.error("⚠️ API của bạn đã hết lượt sử dụng miễn phí hôm nay. Vui lòng thử lại sau.")
-                return None
-            elif "400" in last_error:
-                st.error("⚠️ Yêu cầu không hợp lệ (Lỗi 400).")
-                return None
-
-    st.error(f"⚠️ Lỗi kết nối AI (Đã thử hết các model). Lỗi: {last_error}")
-    return None
+    try:
+        # Bước 1: Gọi hệ thống xem API Key của bạn đang được phép dùng những model nào
+        available_models = []
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                available_models.append(m.name)
+        
+        if not available_models:
+            st.error("⚠️ API Key của bạn không có quyền truy cập vào bất kỳ mô hình tạo văn bản nào.")
+            return None
+            
+        # Bước 2: Tự động chọn model "flash" (bản miễn phí, tốc độ cao) từ danh sách thực tế của bạn
+        target_model = available_models[0] # Lấy mặc định cái đầu tiên để phòng hờ
+        for name in available_models:
+            # Ưu tiên các model có chữ 'flash' vì nó là bản free tier tốt nhất hiện tại
+            if "flash" in name.lower():
+                target_model = name
+                break
+                
+        # Bước 3: Gọi AI bằng model thực tế vừa bắt được (Ví dụ: models/gemini-1.5-flash)
+        model = genai.GenerativeModel(target_model)
+        response = model.generate_content(prompt)
+        return response.text
+        
+    except Exception as e:
+        error_msg = str(e)
+        if "429" in error_msg or "Quota exceeded" in error_msg:
+            st.error("⚠️ API của bạn đã hết lượt sử dụng miễn phí (Quota Exceeded).")
+            return None
+        elif "400" in error_msg:
+            st.error("⚠️ Yêu cầu không hợp lệ (Lỗi 400).")
+            return None
+        else:
+            st.error(f"⚠️ Lỗi kết nối AI: {error_msg}")
+            return None
 
 def parse_json_response(response_text):
     if not response_text: return None
