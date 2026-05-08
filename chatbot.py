@@ -135,7 +135,7 @@ except Exception as e:
 # Hàm gọi Gemini với Model CỐ ĐỊNH - TUYỆT ĐỐI KHÔNG THAY ĐỔI
 def get_gemini_response(prompt):
     # Dòng code cố định theo yêu cầu
-    model = genai.GenerativeModel('models/gemini-flash-latest')
+    model = genai.GenerativeModel('models/gemini-1.5-flash')
     
     try:
         response = model.generate_content(prompt)
