@@ -132,6 +132,33 @@ try:
 except Exception as e:
     st.error(f"Lỗi cấu hình API: {e}")
 
+# Hàm gọi Gemini đã được nâng cấp với cơ chế tự động tìm Model miễn phí
+def get_gemini_response(prompt):
+    models_to_try = [
+        'gemini-1.5-flash', 
+        'gemini-1.5-flash-latest', 
+        'gemini-pro'
+    ]
+    
+    last_error = ""
+    for model_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            return response.text
+        except Exception as e:
+            last_error = str(e)
+            if "404" in last_error or "not found" in last_error.lower():
+                continue 
+            elif "429" in last_error or "Quota exceeded" in last_error:
+                st.error("⚠️ API của bạn đã hết lượt sử dụng miễn phí hôm nay. Vui lòng thử lại sau.")
+                return None
+            elif "400" in last_error:
+                st.error("⚠️ Yêu cầu không hợp lệ (Lỗi 400).")
+                return None
+
+    st.error(f"⚠️ Lỗi kết nối AI (Đã thử hết các model). Lỗi: {last_error}")
+    return None
 
 def parse_json_response(response_text):
     if not response_text: return None
@@ -424,10 +451,6 @@ with st.sidebar:
     # 6. Tải về (.txt)
     txt_data = create_full_txt_export()
     st.download_button("📥 Tải về (.txt)", txt_data, file_name="Bo_Cau_Hoi_On_Tap.txt", mime="text/plain")
-    
-    # Nút Xóa (dưới nút tải về - theo yêu cầu)
-    #if st.button("🗑️ Xóa", key="btn_del_2", help="Xóa hết câu hỏi trong số câu đã tạo"):
-    #     delete_all_questions()
 
     st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
     
@@ -482,7 +505,6 @@ with tab2:
             num_q = st.slider("Số lượng câu hỏi:", 5, 30, 10)
 
         if st.button(f"{btn_label} từ file", key="btn_file"):
-             # Format tên chủ đề theo yêu cầu: Phần 1: Tên file
              file_topic_name = f"Phần {idx+1}: {f.name}"
              q_type = "practice" if st.session_state.mode == "Luyện tập" else "exam"
              generate_quiz("context", chs[idx], False, file_topic_name, num_questions=num_q, quiz_type=q_type)
@@ -501,7 +523,6 @@ if st.session_state.quiz_batches:
         if is_latest: st.markdown('<div id="latest_quiz_batch"></div>', unsafe_allow_html=True)
         
         # === HIỂN THỊ BATCH DẠNG EXPANDER (CẢ 2 CHẾ ĐỘ) ===
-        # Xác định tiêu đề Expander theo format yêu cầu
         if batch_type == "practice":
             expander_title = f"{batch['topic']}: {batch['start_num']}-{batch['end_num']}"
         else: # exam
@@ -611,10 +632,6 @@ if st.session_state.quiz_batches:
                                 val = st.session_state.get(key)
                                 if val:
                                     try:
-                                        # Parse đáp án từ chuỗi "A. Nội dung"
-                                        # Cách này an toàn hơn là dò string
-                                        # Vì val chính là một phần tử trong list opts đã tạo ở trên
-                                        # Ta tìm index của nó trong list opts đó
                                         current_opts = [f"{['A','B','C','D'][k]}. {o}" for k, o in enumerate(batch['data'][i]['data']['options'])]
                                         ans_idx = current_opts.index(val)
                                         batch['data'][i]['user_ans'] = ans_idx
